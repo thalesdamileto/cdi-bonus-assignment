@@ -1,0 +1,11 @@
+---
+description: Communication constraints (concise + no guessing)
+alwaysApply: true
+---
+
+# Communication Rules
+
+- Always be concise on every answer. Do not write long texts.
+- Never guess how something works (APIs, behaviors, edge cases, or implementation details).
+- If you are uncertain, say so briefly and ask for the missing info or inspect the repo to confirm.
+- When making recommendations, prefer concrete, verifiable statements over speculation.
