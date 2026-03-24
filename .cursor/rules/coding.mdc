@@ -1,0 +1,30 @@
+---
+alwaysApply: true
+---
+# Coding & Delivery Rules
+
+- Never guess how code works: before writing new code, verify whether the relevant implementation already exists and/or can be validated by checking the repo.
+- Every code you create must be professional, clean, and ready for production.
+- Prefer libraries/tools over implementing solutions by hand.
+- Prefer simplicity over complexity. Refuse over-engineering.
+- Ensure tests remain working after code changes
+
+## Required sections for every code change
+
+For any proposed code change, include these sections in your response:
+
+## Tests review
+- What tests to add or update
+- How to run/verify them (using the repo’s existing tooling)
+
+## README review
+- What documentation to update (if applicable)
+- What the updated README/doc should say at a minimum
+
+- If the repo has no test setup or testing toolchain, ask before choosing a framework/library.
+
+## Code
+- Write self-explanatory code; comments explain the "why", never the "what"
+- Apply DRY rigorously — extract shared logic into reusable functions
+- Prefer pure/native solutions before external dependencies
+- Every function must handle errors explicitly — no silent failures
