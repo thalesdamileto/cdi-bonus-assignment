@@ -11,10 +11,10 @@ from datetime import datetime
 
 # Get Repo Root
 notebook_path = dbutils.notebook.entry_point.getDbutils().notebook().getContext().notebookPath().get()
-repo_root = f"/Workspace{notebook_path.split('/pipelines_notebooks_templates')[0]}"
-sys.path.append(f"{repo_root}/app")
+repo_root = f"/Workspace{notebook_path.split('/app')[0]}"
+sys.path.append(f"{repo_root}/app/helpers")
 
-from helpers import log
+from general_helpers import log
 
 # COMMAND ----------
 
@@ -23,20 +23,20 @@ from helpers import log
 source_path = f"{repo_root}/data/raw/fake_transactions/part-*.parquet"
 
 # Target data path
-bronze_path = f"{repo_root}/data/bronze/bronze_transactions"
+bronze_path = f"{repo_root}/data/bronze/bronze_transactions" # should use this path for local run
 
 # COMMAND ----------
 
 # DBTITLE 1, create bronze table
-
 try:
     # Read data
     bronze_df = spark.read.format("parquet").load(source_path)
-    bronze_df.show(5, truncate=False)
+    # bronze_df.show(1, truncate=False)
 
-    # Write data
-    bronze_df.write.format("delta").mode("append").save(bronze_path).option("mergeSchema", "true")
+    # Write data to Unity Catalog table
+    ## TODO: to run locally should use bronze_df.write.format("delta").mode("append").save(bronze_path).option("mergeSchema", "true")
+    bronze_df.write.format("delta").option("mergeSchema", "true").mode("append").saveAsTable("bronze.dbo.bronze_transactions")
+    
 except Exception as error:
     log(f"Error: {error}")
     raise error
-
