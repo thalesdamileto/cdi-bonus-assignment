@@ -1,0 +1,10 @@
+services:
+  pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: cdi-bonus-pipeline
+    working_dir: /app
+    command: poetry run python -m app.main
+    volumes:
+      - ./data:/app/data

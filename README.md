@@ -109,6 +109,43 @@ data/gold/transactions/
 - **Poetry** (recommended) or another way to install dependencies from `pyproject.toml` / `poetry.lock`.
 - **Network** on first Spark + Delta use: `configure_spark_with_delta_pip` may resolve JARs via Ivy/Maven.
 
+### Docker Desktop on Windows (step-by-step)
+
+Use this path if you want to run the project on Windows without installing Python, Java, or Poetry locally.
+
+1. Install **Docker Desktop** and make sure it is running with **Linux containers**.
+2. Open **PowerShell** in the repository root folder (where `Dockerfile` and `docker-compose.yml` are).
+3. Build the image and run the pipeline:
+
+```powershell
+docker compose up --build
+```
+
+4. Wait for logs indicating Bronze, Silver, and Gold finished successfully.
+5. Check output files on Windows in:
+   - `data/bronze/bronze_transactions`
+   - `data/silver/transactions`
+   - `data/gold/transactions`
+
+Why data persists on Windows host:
+
+- `docker-compose.yml` maps `./data` (host) to `/app/data` (container), so generated Delta files remain in your project folder after the container exits.
+
+Useful commands (PowerShell):
+
+```powershell
+# Run in detached mode
+docker compose up --build -d
+
+# See service logs
+docker compose logs -f pipeline
+
+# Stop and remove container/network
+docker compose down
+```
+
+If Docker reports daemon/context issues, restart Docker Desktop and rerun the command in the same project directory.
+
 ---
 
 ## Install dependencies
@@ -141,6 +178,14 @@ poetry run python app/main.py
 ```
 
 The pipeline runs **Bronze → Silver → Gold** in one process and stops the Spark session in a `finally` block. Logs are printed via `log(...)`.
+
+**With Docker (Windows/Linux/macOS):**
+
+```bash
+docker compose up --build
+```
+
+This uses `Dockerfile` + `docker-compose.yml` and runs `python -m app.main` inside the container.
 
 **Inspect existing tables (optional):**
 
