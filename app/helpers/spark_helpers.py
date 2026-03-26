@@ -19,7 +19,7 @@ def create_spark_session_with_delta(app_name: str = "cdi-bonus-assignment") -> S
     return configure_spark_with_delta_pip(builder).getOrCreate()
 
 def _user_local_jdk_17() -> Path | None:
-    """JDK instalado em ~/.local/share/java/jdk-17* (ex.: tarball Temurin, sem apt)."""
+    """JDK installed at ~/.local/share/java/jdk-17* (e.g., Temurin tarball, no apt)."""
     base = Path.home() / ".local" / "share" / "java"
     if not base.is_dir():
         return None
@@ -31,7 +31,7 @@ def _user_local_jdk_17() -> Path | None:
 
 
 def ensure_java_home() -> None:
-    """PySpark exige JAVA_HOME; usa variável, JDK em ~/.local/share/java ou `java` no PATH."""
+    """PySpark requires JAVA_HOME; use env var, local JDK, or `java` from PATH."""
     existing = os.environ.get("JAVA_HOME")
     if existing and (Path(existing) / "bin" / "java").is_file():
         return

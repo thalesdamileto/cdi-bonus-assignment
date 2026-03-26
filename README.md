@@ -44,7 +44,17 @@ data/gold/transactions/
 ### Bronze (`app/bronze_pipeline/`)
 
 - **Databricks reference:** `bronze_from_parquet.py` reads **Parquet** from a source path and was intended to land in **Unity Catalog**; comments note **local** use: `write.format("delta").mode("append").save(bronze_path)` with `mergeSchema`.
-- **Local implementation:** `local_bronze.py` reads Parquet from `data/raw/fake_transactions/part-*.parquet` and **appends** to `data/bronze/bronze_transactions` as Delta with **schema evolution** enabled.
+- **Local implementation:** `local_bronze.py` reads Parquet from `data/raw/fake_transactions/part-*.parquet`, applies data-quality checks, writes invalid rows to `data/bronze/quarantine`, and **appends only valid rows** to `data/bronze/bronze_transactions` as Delta with **schema evolution** enabled.
+
+  Data-quality checks in Bronze:
+  - `user_id` must be non-null
+  - `account_id` must be non-null
+  - `transaction_type` must be one of:
+    - `WITHDRAWAL`
+    - `TRANSFER_OUT`
+    - `TRANSFER_IN`
+    - `DEPOSIT`
+    - `WALLET_CREATED`
 
 **Role:** Immutable-style landing of raw events in a queryable, versioned store (Delta).
 
@@ -88,7 +98,8 @@ data/gold/transactions/
 | Path | Description |
 |------|-------------|
 | `data/raw/fake_transactions/` | Input Parquet (wallet-style CDC simulation). |
-| `data/bronze/bronze_transactions/` | Delta: Bronze append of raw events. |
+| `data/bronze/bronze_transactions/` | Delta: Bronze append of valid raw events. |
+| `data/bronze/quarantine/` | Delta: Bronze quarantine for invalid raw events (null IDs or disallowed `transaction_type`). |
 | `data/silver/transactions/` | Delta: per-account aggregates + CDI applicability split. |
 | `data/gold/transactions/*` | Delta: audit, daily bonus, merged account balances. |
 | `app/main.py` | Orchestrates Bronze → Silver → Gold locally. |
@@ -124,6 +135,7 @@ docker compose up --build
 4. Wait for logs indicating Bronze, Silver, and Gold finished successfully.
 5. Check output files on Windows in:
    - `data/bronze/bronze_transactions`
+   - `data/bronze/quarantine`
    - `data/silver/transactions`
    - `data/gold/transactions`
 
