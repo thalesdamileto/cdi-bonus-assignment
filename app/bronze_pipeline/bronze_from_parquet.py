@@ -14,7 +14,7 @@ notebook_path = dbutils.notebook.entry_point.getDbutils().notebook().getContext(
 repo_root = f"/Workspace{notebook_path.split('/app')[0]}"
 sys.path.append(f"{repo_root}/app/helpers")
 
-from general_helpers import log # pyright: ignore[reportUndefinedVariable]
+from general_helpers import log # pyright: ignore
 
 # COMMAND ----------
 
