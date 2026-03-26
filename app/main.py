@@ -2,30 +2,20 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from delta import configure_spark_with_delta_pip
 from pyspark.sql import SparkSession
 
 from app.bronze_pipeline.local_bronze import LocalBronzeConfig, get_local_bronze_tasks
 from app.gold_pipeline.gold_silver import GoldSilverConfig, get_gold_silver_tasks
 from app.helpers.general_helpers import log
-from app.helpers.spark_helpers import ensure_java_home
+from app.helpers.spark_helpers import create_spark_session_with_delta, ensure_java_home
 from app.silver_pipeline.local_silver import get_local_silver_tasks
-
-
-def _create_spark_session() -> SparkSession:
-    builder = (
-        SparkSession.builder.appName("cdi-bonus-assignment")
-        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
-        .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
-    )
-    return configure_spark_with_delta_pip(builder).getOrCreate()
 
 
 def main() -> int:
     spark: SparkSession | None = None
     try:
         ensure_java_home()
-        spark = _create_spark_session()
+        spark = create_spark_session_with_delta()
 
         repo_root = Path(__file__).resolve().parent.parent
         bronze_config = LocalBronzeConfig(

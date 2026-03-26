@@ -5,7 +5,18 @@ import shutil
 import sys
 from pathlib import Path
 
+from delta import configure_spark_with_delta_pip
 from pyspark.sql import SparkSession
+
+
+def create_spark_session_with_delta(app_name: str = "cdi-bonus-assignment") -> SparkSession:
+    """SparkSession with Delta Lake JARs (delta-spark pip) and SQL extensions."""
+    builder = (
+        SparkSession.builder.appName(app_name)
+        .config("spark.sql.extensions", "io.delta.sql.DeltaSparkSessionExtension")
+        .config("spark.sql.catalog.spark_catalog", "org.apache.spark.sql.delta.catalog.DeltaCatalog")
+    )
+    return configure_spark_with_delta_pip(builder).getOrCreate()
 
 def _user_local_jdk_17() -> Path | None:
     """JDK instalado em ~/.local/share/java/jdk-17* (ex.: tarball Temurin, sem apt)."""
