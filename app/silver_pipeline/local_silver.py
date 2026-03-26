@@ -27,6 +27,7 @@ DEFAULT_LOCAL_SILVER_CONFIG: dict[str, str] = {
 
 
 def _build_silver_delta(df_batch: DataFrame, config: dict[str, str]) -> DataFrame:
+    """Build per-account Silver aggregates split by CDI applicability."""
     cdi_applicable_col = config["cdi_applicable_col"]
     event_time_col = config["event_time_col"]
     time_limit = config["time_limit"]
@@ -38,32 +39,32 @@ def _build_silver_delta(df_batch: DataFrame, config: dict[str, str]) -> DataFram
 
     eligible_transactions_df = df_batch.withColumn(
         cdi_applicable_col,
-        (F.col(event_time_col) < F.lit(time_limit)).cast("boolean"),
+        (F.col(event_time_col) < F.lit(time_limit)).cast("boolean"), # if event_time is before time_limit, the transaction is cdi applicable
     )
 
-    grouped_df = eligible_transactions_df.groupBy(
+    grouped_df = eligible_transactions_df.groupBy( # group by account_id and cdi_applicable and sum the amount
         account_id_col,
         cdi_applicable_col,
-    ).agg(F.sum(amount_col).alias("amount_sum"))
+    ).agg(F.sum(amount_col).alias("amount_sum")) # sum the amount by account_id and cdi_applicable
 
-    pivoted_df = grouped_df.groupBy(account_id_col).pivot(
+    pivoted_df = grouped_df.groupBy(account_id_col).pivot( # pivot the data by account_id and cdi_applicable
         cdi_applicable_col,
         [True, False],
-    ).agg(F.sum("amount_sum"))
+    ).agg(F.sum("amount_sum")) # sum the amount by account_id and cdi_applicable
 
     final_df = (
         pivoted_df.withColumn(
             amount_cdi_applicable_col,
             F.coalesce(F.col("true"), F.lit(0.0)),
-        )
+        ) # if cdi_applicable is true, the amount is the amount_cdi_applicable, otherwise it is 0
         .withColumn(
             amount_cdi_not_applicable_col,
             F.coalesce(F.col("false"), F.lit(0.0)),
-        )
+        ) 
         .withColumn(
             total_amount_col,
             F.col(amount_cdi_applicable_col) + F.col(amount_cdi_not_applicable_col),
-        )
+        ) # sum the amount_cdi_applicable and amount_cdi_not_applicable to get the total amount
         .select(
             account_id_col,
             total_amount_col,
@@ -90,6 +91,7 @@ def run_local_silver(
     amount_cdi_not_applicable_col: str,
     total_amount_col: str,
 ) -> None:
+    """Create or merge Silver balances derived from Bronze transactions."""
     try:
         config = {
             "time_limit": time_limit,
@@ -105,22 +107,22 @@ def run_local_silver(
         final_delta_df = _build_silver_delta(bronze_df, config)
 
         if not DeltaTable.isDeltaTable(spark, silver_path):
-            final_delta_df.write.format(target_format).mode(write_mode_if_missing).save(silver_path)
+            final_delta_df.write.format(target_format).mode(write_mode_if_missing).save(silver_path) # if the silver table does not exist, create it
             log(f"Silver step completed (new target): {silver_path}")
             return
 
-        target_df = spark.read.format(target_format).load(silver_path).select(
+        target_df = spark.read.format(target_format).load(silver_path).select( # select the data from the silver table
             account_id_col,
             total_amount_col,
             amount_cdi_applicable_col,
             amount_cdi_not_applicable_col,
         )
 
-        union_df = target_df.unionByName(final_delta_df)
-        merged_source_df = union_df.groupBy(account_id_col).agg(
+        union_df = target_df.unionByName(final_delta_df) # union the data from the silver table and the final delta table
+        merged_source_df = union_df.groupBy(account_id_col).agg( # group by account_id and sum the amount
             F.sum(total_amount_col).alias(total_amount_col),
             F.sum(amount_cdi_applicable_col).alias(amount_cdi_applicable_col),
-            F.sum(amount_cdi_not_applicable_col).alias(amount_cdi_not_applicable_col),
+            F.sum(amount_cdi_not_applicable_col).alias(amount_cdi_not_applicable_col), # sum the amount_cdi_applicable and amount_cdi_not_applicable to get the total amount
         )
 
         target_table = DeltaTable.forPath(spark, silver_path)
@@ -135,7 +137,7 @@ def run_local_silver(
             **update_map,
         }
 
-        target_table.alias("target").merge(
+        target_table.alias("target").merge( # merge the data from the silver table and the final delta table
             source=merged_source_df.alias("source"),
             condition=merge_condition,
         ).whenMatchedUpdate(set=update_map).whenNotMatchedInsert(values=insert_map).execute()
@@ -148,6 +150,7 @@ def run_local_silver(
 def get_local_silver_tasks(
     config: dict[str, str] | None = None,
 ) -> dict[str, Callable[[SparkSession], None]]:
+    """Build the Silver task map with default config plus optional overrides."""
     final_config = dict(DEFAULT_LOCAL_SILVER_CONFIG)
     if config:
         final_config.update(config)
