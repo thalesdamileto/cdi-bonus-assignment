@@ -1,0 +1,22 @@
+[tool.poetry]
+name = "cdi-bonus-assignment"
+version = "0.1.0"
+description = "PySpark pipeline local (Parquet → Delta)"
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.11,<3.13"
+pyspark = "3.5.3"
+delta-spark = "3.2.0"
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^8.3.0"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]
+
+[build-system]
+requires = ["poetry-core>=2.0.0,<3.0.0"]
+build-backend = "poetry.core.masonry.api"
