@@ -1,0 +1,103 @@
+# Execute Instructions
+
+## 1) Run locally (WSL Ubuntu or native Ubuntu)
+
+- If using WSL, make sure your IDE is connected to the **WSL Ubuntu** environment.
+
+### Prerequisites
+
+1. Install Java 17 (required by Spark):
+
+```bash
+sudo apt update && sudo apt install -y openjdk-17-jdk-headless
+java -version
+```
+
+2. Install Poetry (if not installed):
+
+```bash
+pipx install poetry
+```
+
+If you do not use `pipx`, you can use:
+
+```bash
+pip install poetry
+```
+
+### Install and run
+
+1. Clone the repository and enter it:
+
+```bash
+git clone <repository-url>
+cd cdi-bonus-assignment
+```
+
+2. Install dependencies:
+
+```bash
+poetry install
+```
+
+3. Run the pipeline:
+
+```bash
+poetry run python -m app.main
+```
+
+4. (Optional) Inspect generated tables:
+
+```bash
+poetry run python pyspark_notebook.py
+```
+
+5. Run tests:
+
+```bash
+poetry run pytest
+```
+
+---
+
+## 2) Run with Docker
+
+### System requirements
+
+- Docker Desktop installed and running
+- Linux containers enabled
+
+### Build and run
+
+1. Clone the repository and enter it:
+
+```bash
+git clone <repository-url>
+cd cdi-bonus-assignment
+```
+
+2. Build and run:
+
+```bash
+docker compose up --build
+```
+
+### Useful commands
+
+Run in background:
+
+```bash
+docker compose up --build -d
+```
+
+Follow service logs:
+
+```bash
+docker compose logs -f pipeline
+```
+
+Stop and remove containers/network:
+
+```bash
+docker compose down
+```

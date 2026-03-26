@@ -44,7 +44,7 @@ def ingest_to_silver(df_batch : DataFrame, batch_id : str)->None:
     # Pivoting table by column cdi_applicable
     pivoted_delta_df = (cdi_applicable_df
         .groupBy("account_id")
-        .pivot("cdi_applicable", [True, False]) # Definir os valores ajuda na performance
+        .pivot("cdi_applicable", [True, False]) # Defining values explicitly helps performance
         .agg(F.sum("sum(amount)"))
     )
 
