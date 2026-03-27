@@ -103,7 +103,7 @@ def run_local_silver(
             "amount_cdi_not_applicable_col": amount_cdi_not_applicable_col,
             "total_amount_col": total_amount_col,
         }
-        bronze_df = spark.read.format(source_format).load(bronze_path)
+        bronze_df = spark.readStream.format(source_format).load(bronze_path)
         final_delta_df = _build_silver_delta(bronze_df, config)
 
         if not DeltaTable.isDeltaTable(spark, silver_path):
